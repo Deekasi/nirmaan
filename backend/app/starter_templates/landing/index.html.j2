@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ c.app_name }}: {{ c.tagline }}</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="hero">
+    <nav><strong>{{ c.app_name }}</strong></nav>
+    <h1>{{ c.tagline }}</h1>
+    <p>{{ c.description }}</p>
+    <a class="button" href="#signup">Get early access</a>
+  </header>
+
+  <main>
+    <section class="features">
+      <h2>What you get</h2>
+      <div class="grid">
+        {% for f in c.features %}
+        <article>
+          <h3>{{ f.title }}</h3>
+          <p>{{ f.description }}</p>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="audience">
+      <h2>Made for</h2>
+      <p>{{ c.audience }}</p>
+    </section>
+
+    <section id="signup" class="signup">
+      <h2>Be the first to try {{ c.app_name }}</h2>
+      <form onsubmit="event.preventDefault(); this.innerHTML = '<p>Thanks! We\'ll be in touch.</p>';">
+        <input type="email" placeholder="Your email" required aria-label="Email" />
+        <button type="submit">Join the waitlist</button>
+      </form>
+    </section>
+  </main>
+
+  <footer>© {{ c.app_name }}</footer>
+</body>
+</html>

@@ -2,6 +2,7 @@ import os
 
 # Use a throwaway SQLite file for tests. Must be set before the app is imported.
 os.environ["DATABASE_URL"] = "sqlite:///./test_nirmaan.db"
+os.environ["LLM_MODE"] = "fake"  # never call the real AI in tests
 
 import pytest
 from fastapi.testclient import TestClient

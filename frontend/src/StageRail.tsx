@@ -4,7 +4,7 @@ import { STAGES, type Stage } from "./api";
 export function StageRail({ stage, large = false }: { stage: Stage; large?: boolean }) {
   const current = STAGES.findIndex((s) => s.key === stage);
   return (
-    <ol className={`rail ${large ? "rail--large" : ""}`} aria-label={`Step ${current + 1} of ${STAGES.length}`}>
+    <ol className={`rail ${large ? "rail--large" : ""}`} style={{ gridTemplateColumns: `repeat(${STAGES.length}, 1fr)` }} aria-label={`Step ${current + 1} of ${STAGES.length}`}>
       {STAGES.map((s, i) => (
         <li
           key={s.key}

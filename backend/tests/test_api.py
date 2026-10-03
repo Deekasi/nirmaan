@@ -38,12 +38,12 @@ def test_project_crud(client):
     )
     assert created.status_code == 201
     pid = created.json()["id"]
-    assert created.json()["stage"] == "idea"
+    assert created.json()["stage"] == "research"
 
     assert len(client.get("/projects", headers=headers).json()) == 1
 
-    updated = client.patch(f"/projects/{pid}", json={"stage": "prd"}, headers=headers)
-    assert updated.json()["stage"] == "prd"
+    updated = client.patch(f"/projects/{pid}", json={"name": "Mess rating"}, headers=headers)
+    assert updated.json()["name"] == "Mess rating"
 
     assert client.delete(f"/projects/{pid}", headers=headers).status_code == 204
     assert client.get(f"/projects/{pid}", headers=headers).status_code == 404

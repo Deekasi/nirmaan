@@ -1,0 +1,74 @@
+"""{{ c.app_name }}: a simple web app made with Nirmaan.
+
+The server stores {{ c.entity_plural }} in a SQLite database file and serves the web page.
+Open http://localhost:8000 for the app and http://localhost:8000/docs for the API.
+"""
+import sqlite3
+from datetime import datetime, timezone
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from pydantic import BaseModel, Field
+
+APP_NAME = {{ c.app_name | tojson }}
+DB_PATH = Path(__file__).parent / "app.db"
+STATIC = Path(__file__).parent / "static"
+
+app = FastAPI(title=APP_NAME)
+
+
+def db() -> sqlite3.Connection:
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+with db() as conn:
+    conn.execute(
+        """CREATE TABLE IF NOT EXISTS items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            details TEXT NOT NULL DEFAULT '',
+            score INTEGER,
+            created_at TEXT NOT NULL
+        )"""
+    )
+
+
+class ItemIn(BaseModel):
+    title: str = Field(min_length=1, max_length=120)
+    details: str = Field(default="", max_length=1000)
+    score: int | None = Field(default=None, ge=1, le=5)
+
+
+@app.get("/")
+def home():
+    return FileResponse(STATIC / "index.html")
+
+
+@app.get("/api/items")
+def list_items():
+    with db() as conn:
+        rows = conn.execute("SELECT * FROM items ORDER BY id DESC").fetchall()
+    return [dict(r) for r in rows]
+
+
+@app.post("/api/items", status_code=201)
+def add_item(item: ItemIn):
+    now = datetime.now(timezone.utc).isoformat()
+    with db() as conn:
+        cur = conn.execute(
+            "INSERT INTO items (title, details, score, created_at) VALUES (?, ?, ?, ?)",
+            (item.title, item.details, item.score, now),
+        )
+        new_id = cur.lastrowid
+    return {"id": new_id, **item.model_dump(), "created_at": now}
+
+
+@app.delete("/api/items/{item_id}", status_code=204)
+def delete_item(item_id: int):
+    with db() as conn:
+        cur = conn.execute("DELETE FROM items WHERE id = ?", (item_id,))
+    if cur.rowcount == 0:
+        raise HTTPException(404, "Not found")

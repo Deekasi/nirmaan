@@ -1,0 +1,64 @@
+"""{{ c.app_name }}: an AI chatbot made with Nirmaan.
+
+The browser sends messages to this server; the server asks the AI (Groq, free tier) and sends
+the reply back. Your API key stays on the server and is never shown in the browser.
+"""
+import os
+from pathlib import Path
+
+import httpx
+from dotenv import load_dotenv
+from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from pydantic import BaseModel, Field
+
+load_dotenv()
+
+APP_NAME = {{ c.app_name | tojson }}
+PERSONA = {{ c.chatbot_persona | tojson }}
+API_KEY = os.getenv("GROQ_API_KEY", "")
+MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+STATIC = Path(__file__).parent / "static"
+
+app = FastAPI(title=APP_NAME)
+
+
+class Turn(BaseModel):
+    role: str = Field(pattern="^(user|model)$")
+    text: str = Field(max_length=4000)
+
+
+class ChatIn(BaseModel):
+    message: str = Field(min_length=1, max_length=2000)
+    history: list[Turn] = Field(default_factory=list, max_length=20)
+
+
+@app.get("/")
+def home():
+    return FileResponse(STATIC / "index.html")
+
+
+@app.post("/api/chat")
+def chat(body: ChatIn):
+    if not API_KEY or API_KEY == "paste-your-key-here":
+        return {"reply": "I'm not connected yet. Add your GROQ_API_KEY to the .env file and restart the server."}
+
+    messages = [{"role": "system", "content": PERSONA}]
+    for t in body.history:
+        messages.append({"role": "assistant" if t.role == "model" else "user", "content": t.text})
+    messages.append({"role": "user", "content": body.message})
+
+    try:
+        r = httpx.post(
+            GROQ_URL,
+            headers={"Authorization": f"Bearer {API_KEY}"},
+            json={"model": MODEL, "messages": messages, "temperature": 0.7},
+            timeout=60,
+        )
+        if r.status_code == 429:
+            return {"reply": "I'm getting too many messages right now. Please wait a moment and try again."}
+        r.raise_for_status()
+        return {"reply": r.json()["choices"][0]["message"]["content"]}
+    except Exception:
+        return {"reply": "Something went wrong talking to the AI. Check your API key and try again."}

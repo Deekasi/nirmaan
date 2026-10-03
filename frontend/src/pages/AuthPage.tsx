@@ -34,7 +34,7 @@ export default function AuthPage() {
       <div className="auth__intro">
         <h1>Turn an idea into something you can build, and explain.</h1>
         <p className="muted">
-          Nirmaan walks you from a rough idea to a problem statement, PRD, stack, architecture and a starter repo.
+          Nirmaan researches your idea, checks if it is worth building, plans it with you, and gives you a working starter project.
         </p>
       </div>
       <form className="panel auth__form" onSubmit={submit}>

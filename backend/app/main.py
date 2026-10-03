@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import Base, engine
-from app.routers import auth, projects
+from app.routers import auth, projects, stages
 
 
 @asynccontextmanager
@@ -16,7 +16,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Nirmaan API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Nirmaan API", version="0.2.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,10 +24,12 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition"],
 )
 
 app.include_router(auth.router)
 app.include_router(projects.router)
+app.include_router(stages.router)
 
 
 @app.get("/health", tags=["health"])

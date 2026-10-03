@@ -1,0 +1,99 @@
+# {{ c.app_name }}
+
+{{ c.tagline }}
+
+{{ c.description }}
+
+Made for: {{ c.audience }}
+
+> Your full research, plan and viva questions are in **NIRMAAN_REPORT.md**.
+
+{% if template == "landing" -%}
+## Run it on your laptop
+
+No installation needed. Double-click **index.html** to open it in your browser.
+
+To change text or colours, open `index.html` or `style.css` in VS Code, edit, save, and refresh the browser.
+
+## Put it online (free, on Render)
+
+1. Push this folder to a new GitHub repository (see "Save it to GitHub" below).
+2. On render.com: **New → Static Site** → pick your repo.
+3. Build Command: leave empty. Publish Directory: `.`
+4. Click **Create Static Site**. You get a live link in about a minute.
+{%- else -%}
+## Run it on your laptop
+
+You need Python 3.11+ installed. Open this folder in VS Code, open a terminal, and run:
+
+```
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+{% if template == "chatbot" -%}
+copy .env.example .env
+{% endif -%}
+uvicorn main:app --reload
+```
+
+On Mac/Linux, activate with `source .venv/bin/activate` instead.
+{% if template == "chatbot" %}
+Before running, open `.env` and paste your free Groq API key from https://console.groq.com (no credit card needed).
+{% endif %}
+Then open http://localhost:8000 in your browser.
+
+## Put it online (free, on Render)
+
+1. Push this folder to a new GitHub repository (see below).
+2. On render.com: **New → Web Service** → pick your repo.
+3. Runtime: Python 3. Build Command: `pip install -r requirements.txt`
+4. Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+5. Add environment variable `PYTHON_VERSION` = `3.12.7`{% if template == "chatbot" %} and `GROQ_API_KEY` = your key{% endif %}.
+6. Click **Create Web Service**.
+
+{% if template == "webapp" -%}
+Note: on Render's free plan the SQLite file is reset when the server restarts. That's fine for a demo; for real users, switch to a hosted database.
+{% endif -%}
+{%- endif %}
+
+## Save it to GitHub
+
+Create an empty repository on github.com (don't add a README), then in this folder:
+
+```
+git init
+git add .
+git commit -m "First version from Nirmaan"
+git branch -M main
+git remote add origin https://github.com/YOUR-USERNAME/YOUR-REPO.git
+git push -u origin main
+```
+
+## What's in this folder
+
+{% if template == "landing" -%}
+- `index.html`: the page content
+- `style.css`: colours, fonts and layout
+{%- elif template == "webapp" -%}
+- `main.py`: the Python server (FastAPI) and database code
+- `static/index.html`: the web page users see
+- `requirements.txt`: Python packages to install
+{%- else -%}
+- `main.py`: the Python server that talks to the AI (Groq)
+- `static/index.html`: the chat page
+- `.env.example`: where your API key goes (copy to `.env`)
+{%- endif %}
+- `NIRMAAN_REPORT.md`: research, plan and viva prep
+
+## Your feature checklist
+
+This starter gives you a working base app. Build these features on top of it, one at a time:
+
+{% for f in plan.features if f.name in selected -%}
+- [ ] **{{ f.name }}**: {{ f.description }}
+{% endfor %}
+## Ideas for later
+
+{% for f in plan.features if f.name not in selected -%}
+- {{ f.name }}: {{ f.description }}
+{% endfor %}
