@@ -49,7 +49,7 @@ def test_links_must_be_web_urls(client):
 def test_search_and_summary_fields(client):
     h = register(client)
     pid = new_project(client, h)
-    client.post("/projects", json={"name": "Other", "idea": "Something completely different."}, headers=h)
+    client.post("/projects", json={"name": "Other", "idea": "Something completely different for farmers."}, headers=h)
     run_until_plan(client, h, pid)
     found = client.get("/projects?q=mess", headers=h).json()
     assert len(found) == 1 and found[0]["verdict"] == "go" and found[0]["feasibility"] == 8

@@ -7,24 +7,31 @@ them safely on startup (works on SQLite and PostgreSQL). A larger project would 
 from sqlalchemy import inspect, text
 from sqlalchemy.engine import Engine
 
-NEW_PROJECT_COLUMNS = {
-    "status": "VARCHAR(20) DEFAULT 'active'",
-    "github_url": "VARCHAR(300)",
-    "live_url": "VARCHAR(300)",
-    "notes": "TEXT",
-    "finished_at": "TIMESTAMP",
+NEW_COLUMNS = {
+    "projects": {
+        "status": "VARCHAR(20) DEFAULT 'active'",
+        "github_url": "VARCHAR(300)",
+        "live_url": "VARCHAR(300)",
+        "notes": "TEXT",
+        "finished_at": "TIMESTAMP",
+    },
+    "users": {
+        "password_changed_at": "TIMESTAMP",
+    },
 }
 
 
 def add_missing_columns(engine: Engine) -> list[str]:
     inspector = inspect(engine)
-    if "projects" not in inspector.get_table_names():
-        return []
-    existing = {c["name"] for c in inspector.get_columns("projects")}
+    tables = set(inspector.get_table_names())
     added = []
     with engine.begin() as conn:
-        for name, ddl in NEW_PROJECT_COLUMNS.items():
-            if name not in existing:
-                conn.execute(text(f"ALTER TABLE projects ADD COLUMN {name} {ddl}"))
-                added.append(name)
+        for table, columns in NEW_COLUMNS.items():
+            if table not in tables:
+                continue
+            existing = {c["name"] for c in inspector.get_columns(table)}
+            for name, ddl in columns.items():
+                if name not in existing:
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}"))
+                    added.append(name)
     return added

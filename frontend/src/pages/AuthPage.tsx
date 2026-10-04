@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from "react";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
+import { PasswordField } from "../PasswordField";
 
 const JOURNEY = [
   { title: "Research", body: "Who already does this, what users complain about, with links to every source." },
@@ -70,18 +71,15 @@ export default function AuthPage() {
             Email
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
           </label>
-          <label>
-            Password
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={mode === "register" ? 8 : undefined}
-              autoComplete={mode === "register" ? "new-password" : "current-password"}
-            />
-            {mode === "register" && <small className="muted">At least 8 characters.</small>}
-          </label>
+          <PasswordField
+            label="Password"
+            value={password}
+            onChange={setPassword}
+            minLength={mode === "register" ? 8 : undefined}
+            autoComplete={mode === "register" ? "new-password" : "current-password"}
+            hint={mode === "register" ? "At least 8 characters." : undefined}
+          />
+          {mode === "signin" && <Link to="/forgot-password" className="forgot">Forgot password?</Link>}
           {error && <p className="error" role="alert">{error}</p>}
           <button className="btn btn--primary btn--big" disabled={busy}>
             {busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}

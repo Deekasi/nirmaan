@@ -15,6 +15,10 @@ from app.config import settings
 
 # Keeps the writing prompt around 4-5k tokens, inside Groq's free-tier per-minute limits.
 MAX_SOURCES = 10
+
+
+class IdeaUnclear(Exception):
+    """The idea is too vague or random to research honestly."""
 RESULTS_PER_QUERY = 3
 
 
@@ -38,12 +42,15 @@ def _format_for_prompt(sources: list[dict]) -> str:
 def run_research(name: str, idea: str) -> dict:
     if settings.use_fake_llm:
         data = fake.response_for(s.Research).model_dump()
-        return {**data, "sources": _number(fake.SOURCES), "queries": fake.QUERIES, "method": "demo"}
+        return {**data, "sources": _number(fake.SOURCES), "queries": fake.QUERIES, "method": "demo",
+                "interpretation": "Demo data: an app for hostel students to rate mess food."}
 
     note = ""
     if search.available():
         try:
             plan = llm.generate_structured(prompts.search_plan(name, idea), s.SearchPlan)
+            if not plan.idea_is_clear or not plan.queries:
+                raise IdeaUnclear(plan.interpretation or "This idea is too unclear to research.")
             queries = [q.strip() for q in plan.queries if q.strip()][:6]
             found: list[dict] = []
             seen: set[str] = set()
@@ -57,7 +64,8 @@ def run_research(name: str, idea: str) -> dict:
                 research = llm.generate_structured(
                     prompts.research_from_sources(name, idea, _format_for_prompt(found)), s.Research
                 )
-                return {**research.model_dump(), "sources": _number(found), "queries": queries, "method": "web_search"}
+                return {**research.model_dump(), "sources": _number(found), "queries": queries,
+                        "method": "web_search", "interpretation": plan.interpretation}
             note = "Web search returned no results, so this research uses the AI's own search."
         except search.SearchError as e:
             note = f"{e} Used the AI's own search instead."

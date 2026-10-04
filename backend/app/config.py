@@ -13,6 +13,14 @@ class Settings(BaseSettings):
     access_token_minutes: int = 60 * 24
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
+    # Password reset emails. Render's free tier blocks SMTP, so we use Brevo's HTTPS API.
+    # Without a key, the reset link is printed in the server logs (fine for local testing).
+    brevo_api_key: str = ""
+    email_from: str = ""
+    email_from_name: str = "Nirmaan"
+    frontend_url: str = "http://localhost:5173"
+    reset_token_minutes: int = 30
+
     # AI settings. Groq is the default because its free tier needs no credit card.
     llm_provider: str = "groq"  # "groq" or "gemini"
     groq_api_key: str = ""

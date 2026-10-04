@@ -16,7 +16,9 @@ class Competitor(BaseModel):
 
 
 class SearchPlan(BaseModel):
-    queries: list[str] = Field(description="6 short, specific web search queries", min_length=2, max_length=7)
+    idea_is_clear: bool = Field(default=True, description="False if the idea is random letters, too vague to research, or not a product idea")
+    interpretation: str = Field(default="", description="One sentence: what you understood the idea to be, or what is missing if unclear")
+    queries: list[str] = Field(default_factory=list, description="6 short, specific web search queries (empty if the idea is unclear)", max_length=7)
 
 
 class KeyNumber(BaseModel):

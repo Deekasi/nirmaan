@@ -15,6 +15,21 @@ export default function Overview() {
   const [notes, setNotes] = useState(project.notes ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [editIdea, setEditIdea] = useState(false);
+  const [name, setName] = useState(project.name);
+  const [idea, setIdea] = useState(project.idea);
+  const [ideaError, setIdeaError] = useState("");
+
+  async function saveIdea(e: FormEvent) {
+    e.preventDefault();
+    setIdeaError("");
+    try {
+      setProject(await api.updateProject(project.id, { name, idea }));
+      setEditIdea(false);
+    } catch (err) {
+      setIdeaError((err as Error).message);
+    }
+  }
 
   const next = !research ? ["research", "Research the market"]
     : !validate ? ["validate", "Validate the idea"]
@@ -67,6 +82,30 @@ export default function Overview() {
           <Link to={next[0]} className="btn btn--build btn--big">{next[1]}</Link>
         </section>
       )}
+
+      <section className="panel">
+        {editIdea ? (
+          <form className="finish" onSubmit={saveIdea}>
+            <h2>Edit name and idea</h2>
+            <label>Project name<input value={name} onChange={(e) => setName(e.target.value)} required maxLength={120} /></label>
+            <label>Idea<textarea rows={4} value={idea} onChange={(e) => setIdea(e.target.value)} required minLength={10} /></label>
+            <p className="muted">After changing the idea, run Research again so everything matches.</p>
+            {ideaError && <p className="error" role="alert">{ideaError}</p>}
+            <div className="row">
+              <button className="btn btn--build">Save</button>
+              <button type="button" className="btn btn--ghost" onClick={() => { setEditIdea(false); setName(project.name); setIdea(project.idea); }}>Cancel</button>
+            </div>
+          </form>
+        ) : (
+          <div className="row" style={{ justifyContent: "space-between" }}>
+            <div>
+              <h3>Your idea</h3>
+              <p className="prose">{project.idea}</p>
+            </div>
+            <button className="btn btn--ghost" onClick={() => setEditIdea(true)}>Edit idea</button>
+          </div>
+        )}
+      </section>
 
       <section className="overview">
         <Link to="research" className="ov">

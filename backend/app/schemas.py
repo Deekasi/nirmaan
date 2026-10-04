@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from typing import Literal
 
@@ -17,6 +18,15 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(min_length=20, max_length=200)
+    password: str = Field(min_length=8, max_length=128)
+
+
 class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -31,9 +41,25 @@ class Token(BaseModel):
     user: UserOut
 
 
+IDEA_HELP = "Describe your idea in at least a few real words, for example who it's for and what problem it solves."
+
+
+def check_idea_text(idea: str) -> str:
+    """Cheap first filter for keyboard-mashing. Works for any language's letters, not only English."""
+    words = re.findall(r"[^\W\d_]{2,}", idea)
+    if len(words) < 4 or max(len(w) for w in words) > 30:
+        raise ValueError(IDEA_HELP)
+    return idea
+
+
 class ProjectCreate(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     idea: str = Field(min_length=10, max_length=5000)
+
+    @field_validator("idea")
+    @classmethod
+    def idea_must_be_words(cls, v: str) -> str:
+        return check_idea_text(v)
 
 
 URL_PATTERN = r"^(https?://\S{3,290})?$"  # empty string clears the link
@@ -46,6 +72,11 @@ class ProjectUpdate(BaseModel):
     github_url: str | None = Field(default=None, pattern=URL_PATTERN)
     live_url: str | None = Field(default=None, pattern=URL_PATTERN)
     notes: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("idea")
+    @classmethod
+    def idea_must_be_words(cls, v: str | None) -> str | None:
+        return check_idea_text(v) if v is not None else v
 
 
 class ProjectOut(BaseModel):

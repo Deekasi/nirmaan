@@ -57,3 +57,18 @@ def test_users_cannot_see_each_others_projects(client):
     ).json()["id"]
     assert client.get(f"/projects/{pid}", headers=b).status_code == 404
     assert client.get("/projects", headers=b).json() == []
+
+
+def test_gibberish_ideas_are_rejected(client):
+    headers = register(client)
+    for bad in ("hdiheufhuehfoueh79fhrwwunfo", "asdf qwer", "1234567890 !!!!"):
+        r = client.post("/projects", json={"name": "x", "idea": bad}, headers=headers)
+        assert r.status_code == 422, bad
+    ok = client.post("/projects", json={"name": "x", "idea": "किसानों के लिए फसल की कीमत बताने वाला ऐप"}, headers=headers)
+    assert ok.status_code == 201  # Hindi ideas are fine
+
+
+def test_editing_idea_to_gibberish_is_rejected(client):
+    headers = register(client)
+    pid = client.post("/projects", json={"name": "x", "idea": "An app for students to share notes."}, headers=headers).json()["id"]
+    assert client.patch(f"/projects/{pid}", json={"idea": "jhbbikgyuikyui"}, headers=headers).status_code == 422

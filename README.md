@@ -77,12 +77,13 @@ cd backend
 pytest
 ```
 
-35 tests covering auth, project CRUD, stage order, re-runs, all three templates producing valid zips,
+45 tests covering auth, project CRUD, stage order, re-runs, all three templates producing valid zips,
 unknown-feature rejection, users not accessing each other's projects, and the Groq client (simulated replies:
 fenced JSON, invalid-JSON retry, source extraction, search-model fallback, rate limits), and the research
 pipeline (query planning, de-duplicated numbered sources, honest fallback when search fails), the library
 (finish, filters, URL validation), the migration, the quality gate (catches syntax errors and leaked keys),
-missions, trends caching and rate-limit retries. Tests always use fake AI
+missions, trends caching, rate-limit retries, unclear-idea refusal, and the full password reset flow
+(single use, expiry, no account enumeration, cooldown, old sessions signed out). Tests always use fake AI
 (`LLM_MODE=fake`), so they run offline in seconds and cost nothing.
 
 ## Project layout
@@ -129,6 +130,8 @@ frontend/
 | POST   | /auth/register    | Create account, get token |
 | POST   | /auth/login       | Get token                 |
 | GET    | /auth/me          | Current user              |
+| POST   | /auth/forgot-password | Email a one-time reset link |
+| POST   | /auth/reset-password  | Set a new password with the link's token |
 | GET    | /projects         | List my projects          |
 | POST   | /projects         | Create project            |
 | GET    | /projects/{id}    | Get one project           |
@@ -148,6 +151,10 @@ frontend/
 - **SQLite locally, Postgres in Docker.** Zero setup on a low-spec laptop; same SQLAlchemy code for both.
 - **Tables created on startup.** Fine for Phase 1. Switch to Alembic migrations before Phase 2 adds tables.
 - **404 for other users' projects, not 403.** Doesn't reveal that a project ID exists.
+- **Password reset.** A random 32-byte token is emailed; only its SHA-256 hash is stored. Links expire in
+  30 minutes, work once, and the answer is the same whether or not the email has an account (no account
+  enumeration). One email per minute per account. Resetting signs out older sessions (tokens issued before
+  the change are rejected). Emails go through Brevo's HTTPS API because Render's free tier blocks SMTP.
 - **Token in localStorage.** Simple for an MVP. Move to httpOnly cookies before real users.
 - **Templates, not free-form AI code.** Beginners can't fix broken code, so the AI only fills a validated
   config (names, colours, features); the code itself comes from tested templates.

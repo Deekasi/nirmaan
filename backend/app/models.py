@@ -31,6 +31,8 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     name: Mapped[str] = mapped_column(String(120))
     hashed_password: Mapped[str] = mapped_column(String(255))
+    # Login tokens issued before this moment stop working (set when the password is reset).
+    password_changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     projects: Mapped[list["Project"]] = relationship(
@@ -88,4 +90,17 @@ class TrendReport(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     topic: Mapped[str] = mapped_column(String(40), index=True)
     data: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class PasswordReset(Base):
+    """A one-time password reset link. Only a SHA-256 hash of the token is stored."""
+
+    __tablename__ = "password_resets"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

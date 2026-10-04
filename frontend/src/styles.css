@@ -497,3 +497,22 @@ th { color: var(--steel); font-weight: 600; }
 .pstep { grid-template-columns: 1.6rem 12.5rem 1fr auto; }
 .ov > .method, .ov > .badge { justify-self: start; }
 .chip--easy, .chip--medium, .chip--hard, .chip--beginner, .chip--intermediate, .chip--advanced { text-transform: capitalize; }
+
+.understood { background: #f3f7fb; border-left: 4px solid var(--blueprint); padding: 0.6rem 0.9rem; border-radius: 0 8px 8px 0; }
+
+/* password field with show/hide */
+.field { display: grid; gap: 0.35rem; }
+.field > label { font-weight: 600; font-size: 0.95rem; }
+.password { position: relative; display: flex; }
+.password input { padding-right: 5.5rem; }
+.password__toggle {
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  display: inline-flex; align-items: center; gap: 0.35rem; border: 0; background: transparent;
+  color: var(--steel); font: 600 0.85rem var(--body); padding: 0.4rem 0.6rem; border-radius: 6px; cursor: pointer;
+}
+.password__toggle:hover { color: var(--ink); background: #eef2f4; }
+.password__toggle svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.forgot { justify-self: end; font-size: 0.9rem; color: var(--blueprint); margin-top: -0.5rem; }
+.narrow { max-width: 28rem; margin: 3rem auto; padding: 0 1rem; }
+.narrow .panel { gap: 1rem; }
+.h2 { font-size: 1.6rem; }

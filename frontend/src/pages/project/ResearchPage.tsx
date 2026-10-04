@@ -38,6 +38,7 @@ export default function ResearchPage() {
         <StageHead title="Market research" intro="Nirmaan searches the web for competitors, user complaints, market numbers, pricing and India-specific news, then writes a report with a source for every claim." />
         {busy ? <Progress steps={STEPS} note="This usually takes 30 to 90 seconds." /> : button}
         {error && <p className="error" role="alert">{error}</p>}
+        {error.includes("couldn't understand") && <Link to=".." relative="path" className="btn btn--ghost" style={{ justifySelf: "start" }}>Edit the idea</Link>}
       </section>
     );
   }
@@ -53,6 +54,9 @@ export default function ResearchPage() {
           <MethodBadge method={r.method} count={src.length} />
         </div>
         {r.note && <p className="muted">{r.note}</p>}
+        {r.interpretation && (
+          <p className="understood"><strong>We understood your idea as:</strong> {r.interpretation}</p>
+        )}
         {r.queries.length > 0 && (
           <div className="queries">
             <span className="muted">We searched for</span>

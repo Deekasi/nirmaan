@@ -122,5 +122,5 @@ def response_for(schema):
             ],
         )
     if schema is s.SearchPlan:
-        return s.SearchPlan(queries=QUERIES)
+        return s.SearchPlan(idea_is_clear=True, interpretation="An app for hostel students to rate mess food.", queries=QUERIES)
     raise ValueError(f"No fake response for {schema.__name__}")

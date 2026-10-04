@@ -12,15 +12,23 @@ ROLE = (
 
 
 def search_plan(name: str, idea: str) -> str:
+    year = date.today().year
     return f"""{ROLE}
 
-A user wants to build this project. Write 6 web search queries, one for each of these:
+A user wants to build this project.
+
+First, decide if the idea is clear enough to research. Set idea_is_clear to false if it is
+random letters, keyboard mashing, a single vague word, or not a product or project idea.
+Do NOT guess a meaning for unclear text. In "interpretation", write one sentence: either what
+the project is (in plain words), or what is missing and what the user should describe.
+
+If the idea is clear, write 6 web search queries, one for each of these:
 1. existing products, apps or startups that already do this (competitors),
 2. real user complaints, reviews or forum posts about those products or this problem,
 3. market size, growth rate or adoption numbers for this space,
 4. pricing or business models of the competitors,
 5. India: government programs, policies or Indian startups in this space,
-6. recent news from this year about this space.
+6. news from {year} about this space.
 
 Fix spelling mistakes in the idea. Keep each query under 10 words and make it specific.
 
@@ -38,6 +46,10 @@ Write detailed market research for this idea using ONLY the numbered web sources
 - swot: strengths/weaknesses of the user's idea, opportunities/threats from the market.
 - If the sources don't cover something, write "Not found in sources" instead of guessing.
 - Be specific to THIS idea; avoid generic statements that would fit any project.
+- Every section has its own job. Do NOT repeat the same fact or sentence in two sections:
+  summary = the big picture; market_trend = direction of change and why; market_size = numbers
+  or demand signals only; competitors = products; user_complaints = pain points;
+  opportunities = gaps for THIS idea; india_angle = India-specific facts only; swot = short points.
 
 Project name: {name}
 Idea: {idea}

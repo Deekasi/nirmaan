@@ -88,3 +88,11 @@ def test_without_search_key_uses_ai_search(monkeypatch):
     data = research.run_research("X", "some idea here")
     assert data["method"] == "ai_search"
     assert data["sources"][0]["id"] == 1 and data["sources"][0]["domain"] == "t.example"
+
+
+def test_unclear_idea_is_refused_not_guessed(monkeypatch):
+    unclear = json.dumps({"idea_is_clear": False, "interpretation": "This looks like random letters.", "queries": []})
+    calls = install(monkeypatch, [groq_reply(unclear)], lambda q: pytest.fail("must not search an unclear idea"))
+    with pytest.raises(research.IdeaUnclear, match="random letters"):
+        research.run_research("x", "hdiheufhuehfoueh79fhrwwunfo")
+    assert len(calls["groq"]) == 1

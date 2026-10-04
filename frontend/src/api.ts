@@ -53,6 +53,7 @@ export interface Research {
   queries: string[];
   method: ResearchMethod;
   note?: string;
+  interpretation?: string;
 }
 export interface Validation {
   target_user: string;
@@ -179,6 +180,10 @@ export const api = {
   login: (email: string, password: string) =>
     request<TokenResponse>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
   me: () => request<User>("/auth/me"),
+  forgotPassword: (email: string) =>
+    request<{ message: string }>("/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) }),
+  resetPassword: (token: string, password: string) =>
+    request<{ message: string }>("/auth/reset-password", { method: "POST", body: JSON.stringify({ token, password }) }),
   listProjects: () => request<ProjectSummary[]>("/projects"),
   getProject: (id: number) => request<Project>(`/projects/${id}`),
   createProject: (name: string, idea: string) =>

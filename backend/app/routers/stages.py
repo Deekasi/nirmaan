@@ -65,7 +65,14 @@ def list_results(project_id: int, user: User = Depends(get_current_user), db: Se
 @router.post("/research", response_model=StageResultOut)
 def run_research(project_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     project = get_owned_project(project_id, user, db)
-    data = run_ai(research_pipeline.run_research, project.name, project.idea)
+    try:
+        data = run_ai(research_pipeline.run_research, project.name, project.idea)
+    except research_pipeline.IdeaUnclear as e:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            f"Nirmaan couldn't understand this idea, so it didn't guess. {e} "
+            "Edit the idea on the Overview page and try again.",
+        ) from e
     return save_result(db, project, "research", data)
 
 

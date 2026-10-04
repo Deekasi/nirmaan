@@ -4,6 +4,8 @@ import { useAuth } from "./auth";
 import AuthPage from "./pages/AuthPage";
 import Dashboard from "./pages/Dashboard";
 import Explore from "./pages/Explore";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import ProjectLayout from "./pages/project/ProjectLayout";
 import Overview from "./pages/project/Overview";
 import ResearchPage from "./pages/project/ResearchPage";
@@ -64,6 +66,8 @@ export default function App() {
     <Shell>
       <Routes>
         <Route path="/signin" element={<AuthPage />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/" element={<Protected><Dashboard /></Protected>} />
         <Route path="/explore" element={<Protected><Explore /></Protected>} />
         <Route path="/projects/:id" element={<Protected><ProjectLayout /></Protected>}>
