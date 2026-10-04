@@ -12,6 +12,11 @@ sources, validates it honestly, plans version 1 with you, and gives you a workin
 - **Base project:** one of three tested templates (landing site, web app, AI chatbot), customized by AI.
 - **Download:** a zip with working code, a beginner README, and NIRMAAN_REPORT.md (research + plan + viva prep).
 
+## Screenshots
+
+![Sign in](docs/signin.png)
+![Research with live sources and citations](docs/research.png)
+![Verdict and starter project](docs/build.png)
 ## Stack
 
 | Layer    | Tech                                   |
