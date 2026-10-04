@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     groq_model: str = "openai/gpt-oss-120b"
     groq_research_model: str = "groq/compound"  # has built-in web search
+    # Web search for the Research stage. Free key (no card) at https://tavily.com
+    tavily_api_key: str = ""
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
     # "auto" = real AI if the chosen provider has a key, otherwise fake demo data.

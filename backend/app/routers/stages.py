@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.ai import llm, prompts
+from app.ai import llm, prompts, research as research_pipeline
 from app.ai import schemas as ai
 from app.builder import build_zip
 from app.database import get_db
@@ -63,10 +63,8 @@ def list_results(project_id: int, user: User = Depends(get_current_user), db: Se
 @router.post("/research", response_model=StageResultOut)
 def run_research(project_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     project = get_owned_project(project_id, user, db)
-    research, sources = run_ai(
-        llm.research_with_search, prompts.research(project.name, project.idea), ai.Research
-    )
-    return save_result(db, project, "research", {**research.model_dump(), "sources": sources})
+    data = run_ai(research_pipeline.run_research, project.name, project.idea)
+    return save_result(db, project, "research", data)
 
 
 @router.post("/validate", response_model=StageResultOut)

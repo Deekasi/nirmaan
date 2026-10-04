@@ -1,10 +1,12 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, type Project } from "../api";
-import { StageRail } from "../StageRail";
+import { useAuth } from "../auth";
+import { StageMeter } from "../StageRail";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [projects, setProjects] = useState<Project[] | null>(null);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -30,71 +32,82 @@ export default function Dashboard() {
   }
 
   const empty = projects !== null && projects.length === 0;
+  const firstName = user?.name.split(" ")[0] ?? "";
 
   return (
     <>
-      <div className="page__head">
-        <h1>Your projects</h1>
-        {!showForm && !empty && (
-          <button className="btn btn--primary" onClick={() => setShowForm(true)}>
-            New project
-          </button>
-        )}
-      </div>
-
-      {error && <p className="error" role="alert">{error}</p>}
-
-      {(showForm || empty) && (
-        <form className="panel newproject" onSubmit={create}>
-          <h2>{empty ? "Start your first project" : "New project"}</h2>
-          <label>
-            Project name
-            <input value={name} onChange={(e) => setName(e.target.value)} required maxLength={120} placeholder="Mess feedback app" />
-          </label>
-          <label>
-            Describe your idea
-            <textarea
-              value={idea}
-              onChange={(e) => setIdea(e.target.value)}
-              required
-              minLength={10}
-              rows={4}
-              placeholder="Who is it for, and what problem does it solve? Rough is fine."
-            />
-          </label>
-          <div className="row">
-            <button className="btn btn--primary" disabled={busy}>
-              {busy ? "Creating…" : "Create project"}
-            </button>
-            {!empty && (
-              <button type="button" className="btn btn--ghost" onClick={() => setShowForm(false)}>
-                Cancel
+      <header className="band blueprint">
+        <div className="band__inner">
+          <div className="band__head">
+            <div>
+              <h1>{empty ? `Welcome, ${firstName}` : "Your projects"}</h1>
+              <p className="lede" style={{ marginTop: "0.6rem" }}>
+                {empty
+                  ? "Describe an idea in a few lines. Nirmaan will research it, check it and help you build the first version."
+                  : "Pick up where you left off, or start something new."}
+              </p>
+            </div>
+            {!showForm && !empty && (
+              <button className="btn btn--build btn--big" onClick={() => setShowForm(true)}>
+                New project
               </button>
             )}
           </div>
-        </form>
-      )}
+        </div>
+      </header>
 
-      {projects === null && !error && <p className="muted">Loading projects…</p>}
+      <main className="page">
+        {error && <p className="error" role="alert" style={{ marginBottom: "1.5rem" }}>{error}</p>}
 
-      {projects && projects.length > 0 && (
-        <ul className="projects">
-          {projects.map((p) => (
-            <li key={p.id}>
-              <Link to={`/projects/${p.id}`} className="project">
-                <div className="project__top">
-                  <h3>{p.name}</h3>
-                  <time className="muted" dateTime={p.updated_at}>
-                    {new Date(p.updated_at).toLocaleDateString()}
-                  </time>
-                </div>
-                <p className="project__idea">{p.idea}</p>
-                <StageRail stage={p.stage} />
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+        {(showForm || empty) && (
+          <form className="panel newproject" onSubmit={create}>
+            <h2>{empty ? "Start your first project" : "New project"}</h2>
+            <label>
+              Project name
+              <input value={name} onChange={(e) => setName(e.target.value)} required maxLength={120} placeholder="e.g. Mess feedback app" />
+            </label>
+            <label>
+              Describe your idea
+              <textarea
+                value={idea}
+                onChange={(e) => setIdea(e.target.value)}
+                required
+                minLength={10}
+                rows={4}
+                placeholder="Who is it for, and what problem does it solve? Rough is fine, and spelling mistakes are okay."
+              />
+            </label>
+            <div className="row">
+              <button className="btn btn--build" disabled={busy}>
+                {busy ? "Creating…" : "Create project"}
+              </button>
+              {!empty && (
+                <button type="button" className="btn btn--ghost" onClick={() => setShowForm(false)}>
+                  Cancel
+                </button>
+              )}
+            </div>
+          </form>
+        )}
+
+        {projects === null && !error && <p className="muted">Loading projects…</p>}
+
+        {projects && projects.length > 0 && (
+          <ul className="projects">
+            {projects.map((p) => (
+              <li key={p.id}>
+                <Link to={`/projects/${p.id}`} className="project">
+                  <div>
+                    <h3>{p.name}</h3>
+                    <p className="project__idea">{p.idea}</p>
+                  </div>
+                  <StageMeter stage={p.stage} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </main>
     </>
   );
 }

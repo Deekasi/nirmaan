@@ -5,7 +5,8 @@ sources, validates it honestly, plans version 1 with you, and gives you a workin
 
 **Stages:** Research → Validate → Plan → Base project → Download
 
-- **Research:** an AI model with live web search finds competitors, user complaints and trends, with source links.
+- **Research:** the AI writes 4 focused search queries, searches the web (Tavily), and writes the research only
+  from those pages, with numbered [n] citations. The UI shows what was searched and how the research was produced.
 - **Validate:** target user, problem, unique angle, risks, feasibility score and a go / pivot / rethink verdict.
 - **Plan:** features sorted into Must / Nice / Later (you pick), tech stack with reasons, and viva questions.
 - **Base project:** one of three tested templates (landing site, web app, AI chatbot), customized by AI.
@@ -19,7 +20,8 @@ sources, validates it honestly, plans version 1 with you, and gives you a workin
 | Backend  | Python 3.12 + FastAPI + SQLAlchemy 2   |
 | Database | SQLite (local dev) / PostgreSQL (Docker) |
 | Auth     | JWT bearer tokens, bcrypt passwords    |
-| AI       | Groq (free tier: Llama + groq/compound web search); Gemini optional |
+| AI       | Groq free tier (gpt-oss-120b; groq/compound as search fallback); Gemini optional |
+| Search   | Tavily (free tier, 1,000 credits/month) |
 | Templates| Jinja2, rendered into a zip in memory  |
 
 ## Run it (option A: no Docker, lightest on a low-spec laptop)
@@ -35,7 +37,8 @@ uvicorn app.main:app --reload
 ```
 
 Create `backend/.env` (copy `.env.example`) and paste your free Groq key from https://console.groq.com
-(no credit card). Without a key, Nirmaan runs with demo data, which is handy for testing offline.
+(no credit card), and a free Tavily key from https://tavily.com for real web research (`TAVILY_API_KEY`).
+Without keys, Nirmaan runs with demo data, which is handy for testing offline.
 To use Gemini instead, set `LLM_PROVIDER=gemini` and `GEMINI_API_KEY`.
 
 API runs at http://localhost:8000 and interactive docs at http://localhost:8000/docs.
@@ -66,9 +69,10 @@ cd backend
 pytest
 ```
 
-21 tests covering auth, project CRUD, stage order, re-runs, all three templates producing valid zips,
+24 tests covering auth, project CRUD, stage order, re-runs, all three templates producing valid zips,
 unknown-feature rejection, users not accessing each other's projects, and the Groq client (simulated replies:
-fenced JSON, invalid-JSON retry, source extraction, search-model fallback, rate limits). Tests always use fake AI
+fenced JSON, invalid-JSON retry, source extraction, search-model fallback, rate limits), and the research
+pipeline (query planning, de-duplicated numbered sources, honest fallback when search fails). Tests always use fake AI
 (`LLM_MODE=fake`), so they run offline in seconds and cost nothing.
 
 ## Project layout
@@ -82,6 +86,8 @@ backend/
     models.py        User, Project, StageResult, Stage enum
     schemas.py       request/response models (Pydantic)
     ai/llm.py        AI wrapper: Groq (default) or Gemini, JSON validation + retry, web search, fake mode
+    ai/research.py   research pipeline: plan queries, search, cite, record the method used
+    ai/search.py     Tavily web search client
     ai/schemas.py    what the AI must return for each stage
     ai/prompts.py    prompt text per stage
     ai/fake.py       demo data for tests and offline use
@@ -131,8 +137,11 @@ frontend/
 - **Structured output.** Every AI answer is validated against a Pydantic schema before it's saved.
 - **Free, swappable AI provider.** Groq is the default (free, no card); Gemini is one setting away. The rest
   of the app only calls `generate_structured()` and `research_with_search()`.
-- **Grounded research.** Research uses a web-search model and stores the real source URLs. Search mode can't
-  force JSON, so the reply is parsed and, if that fails, re-formatted by a second structured call.
+- **Grounded research with citations.** The AI plans 4 search queries (fixing typos in the idea), Tavily
+  returns real pages, and the AI writes using only those numbered sources, citing [n] after each claim.
+  Citations that don't match a real source are dropped in the UI.
+- **Honest about method.** Each research result records how it was made (live web research, AI web search,
+  or AI knowledge only) and the UI shows it, instead of silently falling back.
 - **Self-correcting JSON.** If the AI's JSON fails validation, it is shown the error and asked to fix it once.
 - **Fake AI mode.** Tests and offline demos never call the API.
 - **Stages run in order** (409 if a previous stage is missing); re-running a stage never moves a project backwards.

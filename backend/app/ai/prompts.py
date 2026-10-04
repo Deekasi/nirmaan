@@ -1,12 +1,45 @@
 """Prompt text for each stage. Kept in one file so they are easy to read and improve."""
 import json
+from datetime import date
 
 from app.ai import schemas as s
 
 ROLE = (
     "You are Nirmaan, a friendly product mentor for students and first-time builders "
-    "with little technical knowledge. Use simple, clear English. Be honest, not hype."
+    "with little technical knowledge. Use simple, clear English. Be honest, not hype. "
+    f"Today's date is {date.today():%d %B %Y}."
 )
+
+
+def search_plan(name: str, idea: str) -> str:
+    return f"""{ROLE}
+
+A user wants to build this project. Write 4 web search queries that will find:
+1. existing products, apps or startups that already do this (competitors),
+2. real user complaints or reviews about those products or this problem,
+3. market size, trends or government programs for this space (include India where relevant),
+4. recent news (this year) about this space.
+
+Fix spelling mistakes in the idea. Keep each query under 10 words.
+
+Project name: {name}
+Idea: {idea}"""
+
+
+def research_from_sources(name: str, idea: str, sources_text: str) -> str:
+    return f"""{ROLE}
+
+Write market research for this idea using ONLY the numbered web sources below.
+- After each claim, cite its source like [2] or [1][4].
+- Competitors must be real products named in the sources. Put the citation in what_they_do.
+- If the sources don't cover something, say so plainly instead of guessing.
+- Be specific to THIS idea; avoid generic statements that would fit any project.
+
+Project name: {name}
+Idea: {idea}
+
+Sources:
+{sources_text}"""
 
 
 def research(name: str, idea: str) -> str:

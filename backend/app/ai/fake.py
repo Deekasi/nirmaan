@@ -2,23 +2,34 @@
 from app.ai import schemas as s
 
 SOURCES = [
-    {"title": "Example market report (demo data)", "url": "https://example.com/market-report"},
-    {"title": "Example user discussion (demo data)", "url": "https://example.com/discussion"},
+    {"title": "Example market report (demo data)", "url": "https://example.com/market-report",
+     "content": "Demo snippet: digital feedback tools are spreading across colleges and hostels."},
+    {"title": "Example user discussion (demo data)", "url": "https://forum.example.com/discussion",
+     "content": "Demo snippet: students say paper feedback forms are ignored."},
+    {"title": "Example news article (demo data)", "url": "https://news.example.com/article",
+     "content": "Demo snippet: campuses invest in student experience apps."},
+]
+
+QUERIES = [
+    "hostel mess food feedback app",
+    "student complaints mess food feedback forms",
+    "campus food service digital feedback India 2026",
+    "college hostel app startup news",
 ]
 
 
 def response_for(schema):
     if schema is s.Research:
         return s.Research(
-            summary="Demo data: this space has several existing apps, but most target large organisations rather than small groups like hostels or colleges.",
-            market_trend="Growing. More institutions are collecting feedback digitally, and students expect quick mobile-first tools.",
+            summary="Demo data: digital feedback tools are spreading on campuses [1], but most target large organisations rather than small groups like hostels [3]. Students say paper forms are ignored [2].",
+            market_trend="Growing. More institutions collect feedback digitally [1][3], and students expect quick mobile-first tools.",
             competitors=[
-                s.Competitor(name="Google Forms", what_they_do="Generic surveys", weakness="No dashboards, no follow-up on issues"),
+                s.Competitor(name="Google Forms", what_they_do="Generic surveys [1]", weakness="No dashboards, no follow-up on issues"),
                 s.Competitor(name="Typeform", what_they_do="Polished forms", weakness="Paid plans; not built for daily ratings"),
                 s.Competitor(name="SurveyMonkey", what_they_do="Survey platform", weakness="Overkill and costly for small groups"),
             ],
             user_complaints=[
-                "Feedback goes nowhere; nobody sees changes",
+                "Feedback goes nowhere; nobody sees changes [2]",
                 "Forms are long and annoying to fill daily",
                 "No way to see trends over time",
             ],
@@ -80,4 +91,6 @@ def response_for(schema):
             entity_plural="ratings",
             chatbot_persona="You are MessMate, a friendly assistant that helps hostel students give clear, polite feedback about mess food.",
         )
+    if schema is s.SearchPlan:
+        return s.SearchPlan(queries=QUERIES)
     raise ValueError(f"No fake response for {schema.__name__}")

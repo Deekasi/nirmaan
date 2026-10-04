@@ -25,7 +25,8 @@ export interface Project {
   updated_at: string;
 }
 
-export interface Source { title: string; url: string }
+export interface Source { id: number; title: string; url: string; domain: string; snippet?: string }
+export type ResearchMethod = "web_search" | "ai_search" | "ai_knowledge" | "demo";
 export interface Research {
   summary: string;
   market_trend: string;
@@ -33,6 +34,9 @@ export interface Research {
   user_complaints: string[];
   opportunities: string[];
   sources: Source[];
+  queries: string[];
+  method: ResearchMethod;
+  note?: string;
 }
 export interface Validation {
   target_user: string;
@@ -134,7 +138,19 @@ export const api = {
 
   getResults: async (id: number): Promise<Results> => {
     const list = await request<StageResult[]>(`/projects/${id}/results`);
-    return Object.fromEntries(list.map((r) => [r.stage, r.data])) as Results;
+    const results = Object.fromEntries(list.map((r) => [r.stage, r.data])) as Results;
+    // Research saved by older versions has no queries/method and unnumbered sources.
+    if (results.research) {
+      const r = results.research;
+      r.queries = r.queries ?? [];
+      r.sources = (r.sources ?? []).map((src, i) => ({
+        ...src,
+        id: src.id ?? i + 1,
+        domain: src.domain ?? new URL(src.url).hostname.replace(/^www\./, ""),
+      }));
+      r.method = r.method ?? (r.sources.length ? "ai_search" : "ai_knowledge");
+    }
+    return results;
   },
   runStage: (id: number, stage: "research" | "validate" | "plan") =>
     request<StageResult>(`/projects/${id}/${stage}`, { method: "POST" }),

@@ -14,12 +14,16 @@ class Competitor(BaseModel):
     weakness: str
 
 
+class SearchPlan(BaseModel):
+    queries: list[str] = Field(description="4 short, specific web search queries", min_length=2, max_length=5)
+
+
 class Research(BaseModel):
-    summary: str = Field(description="2-3 sentence plain-language overview of the market")
-    market_trend: str = Field(description="Is this space growing, stable or shrinking, and why")
-    competitors: list[Competitor] = Field(description="3-5 real existing products")
-    user_complaints: list[str] = Field(description="Real pain points users mention about existing options")
-    opportunities: list[str] = Field(description="Gaps this idea could fill")
+    summary: str = Field(description="3-4 sentence plain-language overview of the market, with [n] citations")
+    market_trend: str = Field(description="Is this space growing, stable or shrinking, and why, with [n] citations")
+    competitors: list[Competitor] = Field(description="3-6 real existing products found in the sources")
+    user_complaints: list[str] = Field(description="Real pain points users mention, each with [n] citations")
+    opportunities: list[str] = Field(description="Gaps this idea could fill, based on the findings")
 
 
 class Validation(BaseModel):
