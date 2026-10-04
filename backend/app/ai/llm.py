@@ -12,6 +12,7 @@ so the app and tests run offline and cost nothing.
 """
 import json
 import re
+import time
 from typing import TypeVar
 
 import httpx
@@ -70,7 +71,14 @@ def research_with_search(prompt: str, schema: type[T]) -> tuple[T, list[dict]]:
 
 # ---------- Groq ----------
 
-def _groq_chat(model: str, messages: list[dict], json_mode: bool) -> dict:
+def _retry_after(r: httpx.Response) -> float | None:
+    try:
+        return float(r.headers.get("retry-after", ""))
+    except ValueError:
+        return None
+
+
+def _groq_chat(model: str, messages: list[dict], json_mode: bool, _retried: bool = False) -> dict:
     body: dict = {"model": model, "messages": messages, "temperature": 0.5}
     if json_mode:
         body["response_format"] = {"type": "json_object"}
@@ -83,6 +91,11 @@ def _groq_chat(model: str, messages: list[dict], json_mode: bool) -> dict:
         )
     except httpx.HTTPError as e:
         raise LLMError(f"Couldn't reach Groq: {e}") from e
+    # Free tier has per-minute token limits. If Groq says "try again in a few seconds", wait once.
+    wait = _retry_after(r) if r.status_code == 429 else None
+    if wait is not None and wait <= 20 and not _retried:
+        time.sleep(wait)
+        return _groq_chat(model, messages, json_mode, _retried=True)
     if r.status_code == 401:
         raise LLMError("Groq rejected the API key. Check GROQ_API_KEY in backend/.env.")
     if r.status_code == 429:

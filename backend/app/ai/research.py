@@ -13,7 +13,9 @@ from app.ai import fake, llm, prompts, search
 from app.ai import schemas as s
 from app.config import settings
 
-MAX_SOURCES = 12
+# Keeps the writing prompt around 4-5k tokens, inside Groq's free-tier per-minute limits.
+MAX_SOURCES = 10
+RESULTS_PER_QUERY = 3
 
 
 def _domain(url: str) -> str:
@@ -30,7 +32,7 @@ def _number(sources: list[dict]) -> list[dict]:
 
 
 def _format_for_prompt(sources: list[dict]) -> str:
-    return "\n\n".join(f"[{i}] {src['title']} ({src['url']})\n{src['content']}" for i, src in enumerate(sources, 1))
+    return "\n\n".join(f"[{i}] {src['title']} ({src['url']})\n{src['content'][:1000]}" for i, src in enumerate(sources, 1))
 
 
 def run_research(name: str, idea: str) -> dict:
@@ -42,11 +44,11 @@ def run_research(name: str, idea: str) -> dict:
     if search.available():
         try:
             plan = llm.generate_structured(prompts.search_plan(name, idea), s.SearchPlan)
-            queries = [q.strip() for q in plan.queries if q.strip()][:4]
+            queries = [q.strip() for q in plan.queries if q.strip()][:6]
             found: list[dict] = []
             seen: set[str] = set()
             for q in queries:
-                for res in search.web_search(q, max_results=5):
+                for res in search.web_search(q, max_results=RESULTS_PER_QUERY):
                     if res["url"] not in seen:
                         seen.add(res["url"])
                         found.append(res)

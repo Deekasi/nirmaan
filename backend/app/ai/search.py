@@ -18,6 +18,7 @@ def available() -> bool:
 
 
 def web_search(query: str, max_results: int = 5) -> list[dict]:
+    depth = "advanced" if settings.research_depth == "advanced" else "basic"
     try:
         r = httpx.post(
             TAVILY_URL,
@@ -25,7 +26,7 @@ def web_search(query: str, max_results: int = 5) -> list[dict]:
             json={
                 "api_key": settings.tavily_api_key,  # older API versions read the key from the body
                 "query": query,
-                "search_depth": "basic",  # 1 credit per search
+                "search_depth": depth,
                 "max_results": max_results,
                 "include_answer": False,
             },
@@ -47,6 +48,6 @@ def web_search(query: str, max_results: int = 5) -> list[dict]:
             out.append({
                 "title": (item.get("title") or url)[:200],
                 "url": url,
-                "content": (item.get("content") or "")[:900],
+                "content": (item.get("content") or "")[:1100],
             })
     return out

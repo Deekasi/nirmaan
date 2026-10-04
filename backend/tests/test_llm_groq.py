@@ -97,3 +97,10 @@ def test_rate_limit_gives_a_friendly_message(monkeypatch):
     queue(monkeypatch, httpx.Response(429, json={}, request=httpx.Request("POST", llm.GROQ_URL)))
     with pytest.raises(llm.LLMError, match="limit"):
         llm.generate_structured("x", s.Validation)
+
+
+def test_short_rate_limit_waits_and_retries_once(monkeypatch):
+    limited = httpx.Response(429, headers={"retry-after": "0"}, json={}, request=httpx.Request("POST", llm.GROQ_URL))
+    sent = queue(monkeypatch, limited, reply(json.dumps(VALIDATION)))
+    assert llm.generate_structured("x", s.Validation).verdict == "go"
+    assert len(sent) == 2

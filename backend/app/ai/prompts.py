@@ -14,13 +14,15 @@ ROLE = (
 def search_plan(name: str, idea: str) -> str:
     return f"""{ROLE}
 
-A user wants to build this project. Write 4 web search queries that will find:
+A user wants to build this project. Write 6 web search queries, one for each of these:
 1. existing products, apps or startups that already do this (competitors),
-2. real user complaints or reviews about those products or this problem,
-3. market size, trends or government programs for this space (include India where relevant),
-4. recent news (this year) about this space.
+2. real user complaints, reviews or forum posts about those products or this problem,
+3. market size, growth rate or adoption numbers for this space,
+4. pricing or business models of the competitors,
+5. India: government programs, policies or Indian startups in this space,
+6. recent news from this year about this space.
 
-Fix spelling mistakes in the idea. Keep each query under 10 words.
+Fix spelling mistakes in the idea. Keep each query under 10 words and make it specific.
 
 Project name: {name}
 Idea: {idea}"""
@@ -29,10 +31,12 @@ Idea: {idea}"""
 def research_from_sources(name: str, idea: str, sources_text: str) -> str:
     return f"""{ROLE}
 
-Write market research for this idea using ONLY the numbered web sources below.
+Write detailed market research for this idea using ONLY the numbered web sources below.
 - After each claim, cite its source like [2] or [1][4].
-- Competitors must be real products named in the sources. Put the citation in what_they_do.
-- If the sources don't cover something, say so plainly instead of guessing.
+- Competitors must be real products named in the sources. Include pricing when the sources mention it.
+- key_numbers: only numbers that literally appear in the sources, each with its source number.
+- swot: strengths/weaknesses of the user's idea, opportunities/threats from the market.
+- If the sources don't cover something, write "Not found in sources" instead of guessing.
 - Be specific to THIS idea; avoid generic statements that would fit any project.
 
 Project name: {name}

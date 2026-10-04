@@ -46,6 +46,12 @@ class Project(Base):
     name: Mapped[str] = mapped_column(String(120))
     idea: Mapped[str] = mapped_column(Text)
     stage: Mapped[Stage] = mapped_column(Enum(Stage), default=Stage.research)
+    # "active" while being worked on, "finished" once the user marks it done.
+    status: Mapped[str | None] = mapped_column(String(20), default="active")
+    github_url: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    live_url: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
@@ -72,3 +78,14 @@ class StageResult(Base):
     )
 
     project: Mapped[Project] = relationship(back_populates="results")
+
+
+class TrendReport(Base):
+    """Cached results for the Explore page, so we don't spend search credits on every visit."""
+
+    __tablename__ = "trend_reports"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    topic: Mapped[str] = mapped_column(String(40), index=True)
+    data: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

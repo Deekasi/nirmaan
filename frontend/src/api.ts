@@ -21,8 +21,19 @@ export interface Project {
   name: string;
   idea: string;
   stage: Stage;
+  status: "active" | "finished";
+  github_url: string | null;
+  live_url: string | null;
+  notes: string | null;
+  finished_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface ProjectSummary extends Project {
+  verdict: "go" | "pivot" | "rethink" | null;
+  feasibility: number | null;
+  template: Template | null;
 }
 
 export interface Source { id: number; title: string; url: string; domain: string; snippet?: string }
@@ -30,7 +41,12 @@ export type ResearchMethod = "web_search" | "ai_search" | "ai_knowledge" | "demo
 export interface Research {
   summary: string;
   market_trend: string;
-  competitors: { name: string; what_they_do: string; weakness: string }[];
+  market_size?: string;
+  key_numbers?: { label: string; value: string; source: number | null }[];
+  target_segments?: string[];
+  india_angle?: string;
+  swot?: { strengths: string[]; weaknesses: string[]; opportunities: string[]; threats: string[] } | null;
+  competitors: { name: string; what_they_do: string; weakness: string; pricing?: string }[];
   user_complaints: string[];
   opportunities: string[];
   sources: Source[];
@@ -57,9 +73,23 @@ export interface Plan {
   beginner_explanation: string;
   viva_questions: { question: string; answer: string }[];
 }
+export interface CheckStep { name: string; status: "pass" | "warn" | "fail" | "skip"; detail: string; ms: number }
+export interface Checks {
+  steps: CheckStep[];
+  passed: number;
+  total: number;
+  ship_ready: boolean;
+  files: { path: string; lines: number; bytes: number; lang: string }[];
+  lines_by_language: Record<string, number>;
+  total_lines: number;
+}
+export interface Mission { id: string; title: string; detail: string; difficulty: "easy" | "medium" | "hard"; skills: string[] }
 export interface Build {
   template: Template;
   selected_features: string[];
+  checks?: Checks;
+  missions?: Mission[];
+  missions_done?: string[];
   config: {
     app_name: string;
     tagline: string;
@@ -76,6 +106,27 @@ export interface Results {
   build?: Build;
 }
 interface StageResult { stage: keyof Results; data: unknown }
+
+export const TOPICS = [
+  { key: "all", label: "Everything" },
+  { key: "ai", label: "AI" },
+  { key: "education", label: "Education" },
+  { key: "health", label: "Health" },
+  { key: "fintech", label: "Fintech" },
+  { key: "agriculture", label: "Agriculture" },
+  { key: "climate", label: "Climate" },
+  { key: "mobility", label: "Mobility" },
+] as const;
+export type Topic = (typeof TOPICS)[number]["key"];
+export interface TrendReport {
+  topic: Topic;
+  headline: string;
+  trends: { title: string; why_now: string; example_ideas: string[]; difficulty: "beginner" | "intermediate" | "advanced"; sources: number[] }[];
+  sources: Source[];
+  method: ResearchMethod;
+  updated_at: string;
+  cached: boolean;
+}
 
 interface TokenResponse {
   access_token: string;
@@ -128,11 +179,11 @@ export const api = {
   login: (email: string, password: string) =>
     request<TokenResponse>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
   me: () => request<User>("/auth/me"),
-  listProjects: () => request<Project[]>("/projects"),
+  listProjects: () => request<ProjectSummary[]>("/projects"),
   getProject: (id: number) => request<Project>(`/projects/${id}`),
   createProject: (name: string, idea: string) =>
     request<Project>("/projects", { method: "POST", body: JSON.stringify({ name, idea }) }),
-  updateProject: (id: number, patch: Partial<Pick<Project, "name" | "idea">>) =>
+  updateProject: (id: number, patch: Partial<Pick<Project, "name" | "idea" | "status" | "github_url" | "live_url" | "notes">>) =>
     request<Project>(`/projects/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),
   deleteProject: (id: number) => request<void>(`/projects/${id}`, { method: "DELETE" }),
 
@@ -159,6 +210,10 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ selected_features, template }),
     }),
+  updateMissions: (id: number, done: string[]) =>
+    request<StageResult>(`/projects/${id}/missions`, { method: "PUT", body: JSON.stringify({ done }) }),
+  getTrends: (topic: Topic, refresh = false) =>
+    request<TrendReport>(`/trends?topic=${topic}${refresh ? "&refresh=true" : ""}`),
   download: async (id: number) => {
     const token = getToken();
     const res = await fetch(`${API_URL}/projects/${id}/download`, {

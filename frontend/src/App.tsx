@@ -1,9 +1,16 @@
-import { Navigate, Route, Routes, Link } from "react-router-dom";
+import { Navigate, Route, Routes, Link, NavLink } from "react-router-dom";
 import type { ReactNode } from "react";
 import { useAuth } from "./auth";
 import AuthPage from "./pages/AuthPage";
 import Dashboard from "./pages/Dashboard";
-import ProjectPage from "./pages/ProjectPage";
+import Explore from "./pages/Explore";
+import ProjectLayout from "./pages/project/ProjectLayout";
+import Overview from "./pages/project/Overview";
+import ResearchPage from "./pages/project/ResearchPage";
+import ValidatePage from "./pages/project/ValidatePage";
+import PlanPage from "./pages/project/PlanPage";
+import BuildPage from "./pages/project/BuildPage";
+import ReportPage from "./pages/project/ReportPage";
 
 function Protected({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -33,6 +40,12 @@ function Shell({ children }: { children: ReactNode }) {
           nirmaan
         </Link>
         {user && (
+          <nav className="topbar__nav" aria-label="Main">
+            <NavLink to="/" end>Projects</NavLink>
+            <NavLink to="/explore">Explore</NavLink>
+          </nav>
+        )}
+        {user && (
           <div className="topbar__user">
             <span>{user.name}</span>
             <button className="btn btn--onblue" onClick={signOut}>
@@ -52,7 +65,15 @@ export default function App() {
       <Routes>
         <Route path="/signin" element={<AuthPage />} />
         <Route path="/" element={<Protected><Dashboard /></Protected>} />
-        <Route path="/projects/:id" element={<Protected><ProjectPage /></Protected>} />
+        <Route path="/explore" element={<Protected><Explore /></Protected>} />
+        <Route path="/projects/:id" element={<Protected><ProjectLayout /></Protected>}>
+          <Route index element={<Overview />} />
+          <Route path="research" element={<ResearchPage />} />
+          <Route path="validate" element={<ValidatePage />} />
+          <Route path="plan" element={<PlanPage />} />
+          <Route path="build" element={<BuildPage />} />
+          <Route path="report" element={<ReportPage />} />
+        </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Shell>

@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     groq_research_model: str = "groq/compound"  # has built-in web search
     # Web search for the Research stage. Free key (no card) at https://tavily.com
     tavily_api_key: str = ""
+    # "advanced" reads deeper page content (2 credits per search); "basic" is 1 credit.
+    research_depth: str = "advanced"
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
     # "auto" = real AI if the chosen provider has a key, otherwise fake demo data.

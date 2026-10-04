@@ -5,11 +5,13 @@ from sqlalchemy.orm import Session
 from app.ai import llm, prompts, research as research_pipeline
 from app.ai import schemas as ai
 from app.builder import build_zip
+from app.missions import build_missions
+from app.verify import verify_zip
 from app.database import get_db
 from app.deps import get_current_user
 from app.models import STAGE_ORDER, Project, Stage, StageResult, User
 from app.routers.projects import get_owned_project
-from app.schemas import PlanSelection, ProjectOut, StageResultOut
+from app.schemas import MissionsUpdate, PlanSelection, ProjectOut, StageResultOut
 
 router = APIRouter(prefix="/projects/{project_id}", tags=["stages"])
 
@@ -106,16 +108,46 @@ def run_build(
         prompts.build_config(project.name, project.idea, validation, body.selected_features, body.template),
         ai.BaseProjectConfig,
     )
-    data = {"template": body.template, "selected_features": body.selected_features, "config": config.model_dump()}
+    old = get_result(db, project, "build")
+    previously_done = set((old.data.get("missions_done") if old else None) or [])
+    missions = build_missions(body.template, body.selected_features, plan["features"])
+    data = {
+        "template": body.template,
+        "selected_features": body.selected_features,
+        "config": config.model_dump(),
+        "missions": missions,
+        "missions_done": [m["id"] for m in missions if m["id"] in previously_done],
+    }
+    # Build the real zip now and run the quality checks on it.
+    _, zip_bytes = build_zip(body.template, build_context(db, project, data))
+    data["checks"] = verify_zip(zip_bytes)
     return save_result(db, project, "build", data)
 
 
-@router.get("/download")
-def download(project_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+@router.put("/missions", response_model=StageResultOut)
+def update_missions(
+    project_id: int,
+    body: MissionsUpdate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     project = get_owned_project(project_id, user, db)
+    result = get_result(db, project, "build")
+    if result is None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Build the starter project first.")
+    valid = {m["id"] for m in result.data.get("missions", [])}
+    unknown = [m for m in body.done if m not in valid]
+    if unknown:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"Unknown missions: {', '.join(unknown)}")
+    result.data = {**result.data, "missions_done": list(dict.fromkeys(body.done))}  # new dict so SQLAlchemy saves it
+    db.commit()
+    db.refresh(result)
+    return result
+
+
+def build_context(db: Session, project: Project, build: dict) -> dict:
     research = require_result(db, project, "research")
-    build = require_result(db, project, "build")
-    context = {
+    return {
         "project": ProjectOut.model_validate(project).model_dump(),
         "research": research,
         "sources": research.get("sources", []),
@@ -124,7 +156,13 @@ def download(project_id: int, user: User = Depends(get_current_user), db: Sessio
         "selected": build["selected_features"],
         "c": build["config"],
     }
-    filename, data = build_zip(build["template"], context)
+
+
+@router.get("/download")
+def download(project_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    project = get_owned_project(project_id, user, db)
+    build = require_result(db, project, "build")
+    filename, data = build_zip(build["template"], build_context(db, project, build))
     return Response(
         content=data,
         media_type="application/zip",

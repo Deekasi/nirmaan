@@ -13,8 +13,10 @@ SOURCES = [
 QUERIES = [
     "hostel mess food feedback app",
     "student complaints mess food feedback forms",
-    "campus food service digital feedback India 2026",
-    "college hostel app startup news",
+    "campus food service market size India",
+    "feedback app pricing for colleges",
+    "India hostel mess FSSAI guidelines startups",
+    "college hostel app startup news 2026",
 ]
 
 
@@ -23,10 +25,16 @@ def response_for(schema):
         return s.Research(
             summary="Demo data: digital feedback tools are spreading on campuses [1], but most target large organisations rather than small groups like hostels [3]. Students say paper forms are ignored [2].",
             market_trend="Growing. More institutions collect feedback digitally [1][3], and students expect quick mobile-first tools.",
+            market_size="Demo data: India has thousands of college hostels serving daily meals [1]; no exact market size found in sources.",
+            key_numbers=[
+                s.KeyNumber(label="Students who skip feedback forms (demo)", value="Over half", source=2),
+                s.KeyNumber(label="Campuses using digital feedback (demo)", value="Growing yearly", source=1),
+            ],
+            target_segments=["Hostel students who eat in the mess daily", "Wardens and mess committees", "Mess contractors"],
             competitors=[
-                s.Competitor(name="Google Forms", what_they_do="Generic surveys [1]", weakness="No dashboards, no follow-up on issues"),
-                s.Competitor(name="Typeform", what_they_do="Polished forms", weakness="Paid plans; not built for daily ratings"),
-                s.Competitor(name="SurveyMonkey", what_they_do="Survey platform", weakness="Overkill and costly for small groups"),
+                s.Competitor(name="Google Forms", what_they_do="Generic surveys [1]", weakness="No dashboards, no follow-up on issues", pricing="Free"),
+                s.Competitor(name="Typeform", what_they_do="Polished forms", weakness="Paid plans; not built for daily ratings", pricing="Free tier, paid plans monthly"),
+                s.Competitor(name="SurveyMonkey", what_they_do="Survey platform", weakness="Overkill and costly for small groups", pricing="Paid plans"),
             ],
             user_complaints=[
                 "Feedback goes nowhere; nobody sees changes [2]",
@@ -37,6 +45,13 @@ def response_for(schema):
                 "A 10-second daily rating flow",
                 "A simple dashboard showing what to fix first",
             ],
+            india_angle="Demo data: hostel mess committees are common in Indian colleges [3], so a committee dashboard fits how decisions are already made.",
+            swot=s.Swot(
+                strengths=["Tiny scope, easy to build", "Real users on campus"],
+                weaknesses=["Depends on students rating daily"],
+                opportunities=["No tool built for mess committees [3]"],
+                threats=["Google Forms is free and familiar [1]"],
+            ),
         )
     if schema is s.Validation:
         return s.Validation(
@@ -90,6 +105,21 @@ def response_for(schema):
             entity_name="rating",
             entity_plural="ratings",
             chatbot_persona="You are MessMate, a friendly assistant that helps hostel students give clear, polite feedback about mess food.",
+        )
+    if schema is s.TrendList:
+        return s.TrendList(
+            headline="Demo data: campus and city problems are a rich source of small, buildable projects.",
+            trends=[
+                s.Trend(title="AI study helpers", why_now="Students already use AI daily [1]; tools tuned to Indian syllabi are rare [3].",
+                        example_ideas=["Chapter-wise doubt solver for one subject", "Previous-year paper analyzer", "Viva question generator"],
+                        difficulty="intermediate", sources=[1, 3]),
+                s.Trend(title="Campus operations apps", why_now="Hostels and canteens still run on paper [2].",
+                        example_ideas=["Mess feedback app", "Laundry slot booking", "Lost and found board"],
+                        difficulty="beginner", sources=[2]),
+                s.Trend(title="Local language interfaces", why_now="Most new internet users prefer Indian languages [3].",
+                        example_ideas=["Hindi voice notes to text", "Bilingual notice board", "Farmer price alerts in Hindi"],
+                        difficulty="intermediate", sources=[3]),
+            ],
         )
     if schema is s.SearchPlan:
         return s.SearchPlan(queries=QUERIES)
