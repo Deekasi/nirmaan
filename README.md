@@ -17,6 +17,7 @@ sources, validates it honestly, plans version 1 with you, and gives you a workin
 ![Sign in](docs/signin.png)
 ![Research with live sources and citations](docs/research.png)
 ![Verdict and starter project](docs/build.png)
+
 ## Stack
 
 | Layer    | Tech                                   |
